@@ -16,4 +16,4 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
-      - run: echo "Here is the secrets.GITHUB_TOKEN ${{ secrets.TEST_SECRETS }}."
+      - run: if [ ${{ secrets.TEST_SECRETS }} == 'TEST_SECRETS' ]; then echo '🎉 The build was successful!'; else echo '🔥 The build failed.'; fi
