@@ -1,6 +1,25 @@
 package main
 
+import (
+	"log"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
+
 func main() {
+	encoderCfg := zap.NewProductionEncoderConfig()
+	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+	cfg := zap.NewProductionConfig()
+	cfg.EncoderConfig = encoderCfg
+	logger, err := cfg.Build()
+	if err != nil {
+		log.Fatalf("can't initialize zap logger: %v", err)
+	}
+	defer logger.Sync()
+	zap.ReplaceGlobals(logger)
+	zap.L().Warn("test")
+	zap.L().Info("test")
 	// cli := pinecone.Client{
 	// 	IndexHost: `https://client-test-sc3ybx5.svc.apw5-4e34-81fa.pinecone.io`,
 	// 	APIKey:    "35f8834b-7bf6-4b91-a67e-69e89fd9bfb3",

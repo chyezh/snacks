@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/pingcap/errors"
+	"github.com/pkg/errors"
 )
 
 type DeleteRequest struct {

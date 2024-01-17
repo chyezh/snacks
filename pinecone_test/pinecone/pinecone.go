@@ -31,7 +31,7 @@ func (c *Client) doRequest(ctx context.Context, method, methodPath string, paylo
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, errors.Errorf("failed to do request, method: %s, error: %+v", method, err)
+		return nil, errors.Wrapf(err, "failed to do request, method: %s", method)
 	}
 	return res, nil
 }
