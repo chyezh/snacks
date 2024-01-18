@@ -7,58 +7,45 @@ import (
 	"pinecone_test/metrics"
 	"pinecone_test/pinecone"
 
-	"github.com/pkg/errors"
 	"github.com/remeh/sizedwaitgroup"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
 
-var batchWriteLimit int = 1000
+var batchUpsertLimit int = 1000
 
-type WriteTask struct {
+type UpsertTask struct {
 	*Agent
 	wg      *sizedwaitgroup.SizedWaitGroup
 	rate    rate.Limiter
 	timeout time.Duration
-	limit   int
 	name    string
 }
 
-func (w *WriteTask) Do() {
+func (w *UpsertTask) Do(dataSource <-chan pinecone.UpsertVector) {
 	defer w.wg.Wait()
 
-	pending := make([]pinecone.UpsertVector, 0, batchWriteLimit)
-	cnt := 0
-
-	for {
-		v, ok := <-w.dataSource
-		if ok {
-			break
-		}
+	pending := make([]pinecone.UpsertVector, 0, batchUpsertLimit)
+	for v := range dataSource {
 		pending = append(pending, v)
-		cnt++
-		if cnt >= w.limit {
-			break
-		}
-
-		if len(pending) >= batchWriteLimit {
+		if len(pending) >= batchUpsertLimit {
 			ready := pending
-			pending = make([]pinecone.UpsertVector, 0, batchWriteLimit)
-			w.startNewWriting(ready)
+			pending = make([]pinecone.UpsertVector, 0, batchUpsertLimit)
+			w.startNewTask(ready)
 		}
 	}
 	if len(pending) > 0 {
-		w.startNewWriting(pending)
+		w.startNewTask(pending)
 	}
 }
 
-func (w *WriteTask) startNewWriting(vectors []pinecone.UpsertVector) {
-	w.rate.WaitN(context.Background(), len(vectors))
+func (w *UpsertTask) startNewTask(vectors []pinecone.UpsertVector) {
+	_ = w.rate.WaitN(context.Background(), len(vectors))
 	w.wg.Add()
 	go func() {
 		defer w.wg.Done()
 		req := pinecone.UpsertRequest{
-			Namespace: "test",
+			Namespace: w.Namespace,
 			Vectors:   vectors,
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), w.timeout)
@@ -68,8 +55,7 @@ func (w *WriteTask) startNewWriting(vectors []pinecone.UpsertVector) {
 		cost := time.Since(start)
 		if err != nil {
 			zap.L().Warn("upsert failure", zap.Error(err))
-		}
-		if response.UpsertedCount != len(vectors) {
+		} else if response.UpsertedCount != len(vectors) {
 			zap.L().Warn("upsert result unexpected", zap.Int("upsertedCount", response.UpsertedCount), zap.Int("expected", len(vectors)))
 		}
 
@@ -85,14 +71,4 @@ func (w *WriteTask) startNewWriting(vectors []pinecone.UpsertVector) {
 			status,
 		).Add(float64(len(vectors)))
 	}()
-}
-
-func getError(err error) string {
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return "timeout"
-		}
-		return "error"
-	}
-	return "success"
 }

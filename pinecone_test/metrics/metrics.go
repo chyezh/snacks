@@ -24,4 +24,12 @@ var (
 		},
 		[]string{"name", "method", "status"},
 	)
+	ReadUnitsTotal = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: Namespace,
+			Subsystem: Subsystem,
+			Name:      "read_units_total",
+		},
+		[]string{"name"},
+	)
 )

@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
+
+	"pinecone_test/dataset/cohere"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -18,8 +21,14 @@ func main() {
 	}
 	defer logger.Sync()
 	zap.ReplaceGlobals(logger)
-	zap.L().Warn("test")
-	zap.L().Info("test")
+
+	ch, err := cohere.ReadAndDecodeProtoBlocks("~/raw_data/output_part_1.bin")
+	if err != nil {
+		panic(err)
+	}
+	for item := range ch {
+		fmt.Println(item.Id)
+	}
 	// cli := pinecone.Client{
 	// 	IndexHost: `https://client-test-sc3ybx5.svc.apw5-4e34-81fa.pinecone.io`,
 	// 	APIKey:    "35f8834b-7bf6-4b91-a67e-69e89fd9bfb3",
