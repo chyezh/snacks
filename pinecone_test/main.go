@@ -73,13 +73,6 @@ func ReadWriteTask(a *testagent.Agent, testCase *cohere.TestCase) {
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 	defer wg.Wait()
-	go func() {
-		defer wg.Done()
-		for _, limit := range queryLimit {
-			queryTask := a.QueryTask("rw", 200, rate.Limit(limit))
-			queryTask.Do(testCase.QueryChan(limit * 30))
-		}
-	}()
 
 	go func() {
 		defer wg.Done()
@@ -91,6 +84,15 @@ func ReadWriteTask(a *testagent.Agent, testCase *cohere.TestCase) {
 		defer wg.Done()
 		deleteTask := a.DeleteTask("rw", 100, 2000)
 		deleteTask.Do(testCase.DeleteChan(batchSize / 10))
+	}()
+
+	time.Sleep(5 * time.Second)
+	go func() {
+		defer wg.Done()
+		for _, limit := range queryLimit {
+			queryTask := a.QueryTask("rw", 200, rate.Limit(limit))
+			queryTask.Do(testCase.QueryChan(limit * 30))
+		}
 	}()
 }
 
