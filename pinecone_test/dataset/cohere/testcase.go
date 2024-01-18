@@ -10,7 +10,7 @@ import (
 	"pinecone_test/pinecone"
 )
 
-var batchSize = 10
+var batchSize = 500
 
 func NewTestCase(r *Reader, namespace string) *TestCase {
 	tc := &TestCase{
@@ -55,18 +55,27 @@ func (tc *TestCase) doDelete() {
 			continue
 		}
 
-		id := rand.Int31n(maxID)
-		if _, ok := tc.deleted[id]; ok {
+		req := pinecone.DeleteRequest{
+			Namespace: tc.Namespace,
+			IDs:       make([]string, 0, batchSize),
+		}
+		for i := 0; i < batchSize; i++ {
+			id := rand.Int31n(maxID)
+			if _, ok := tc.deleted[id]; ok {
+				continue
+			}
+			req.IDs = append(req.IDs, strconv.FormatInt(int64(id), 10))
+		}
+		if len(req.IDs) <= 100 {
 			continue
 		}
+
 		select {
-		case tc.deleteCh <- pinecone.DeleteRequest{
-			Namespace: tc.Namespace,
-			IDs: []string{
-				strconv.FormatInt(int64(id), 10),
-			},
-		}:
-			tc.deleted[id] = struct{}{}
+		case tc.deleteCh <- req:
+			for _, id := range req.IDs {
+				intID, _ := strconv.ParseInt(id, 10, 64)
+				tc.deleted[int32(intID)] = struct{}{}
+			}
 		case <-tc.closed:
 			return
 		}

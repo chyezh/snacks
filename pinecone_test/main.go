@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"pinecone_test/dataset/cohere"
 	"pinecone_test/pinecone"
@@ -20,10 +21,10 @@ import (
 )
 
 const (
-	batchSize = 1000
+	batchSize = 5000000
 )
 
-var queryLimit = []int{10}
+var queryLimit = []int{100, 500, 1000}
 
 func main() {
 	initLogger()
@@ -36,17 +37,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	testCase := cohere.NewTestCase(r, "huge")
+	defer testCase.Close()
 
 	f, err := os.OpenFile("op.log", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 	if err != nil {
 		panic(err)
 	}
 	w := bufio.NewWriter(f)
-	defer w.Flush()
-	defer f.Close()
 
-	testCase := cohere.NewTestCase(r, "cot")
-	defer testCase.Close()
 	a := &testagent.Agent{
 		Client: &pinecone.Client{
 			APIKey:    "35f8834b-7bf6-4b91-a67e-69e89fd9bfb3",
@@ -55,10 +54,17 @@ func main() {
 		Mu:       sync.Mutex{},
 		OpLogger: w,
 	}
+	defer func() {
+		a.Mu.Lock()
+		defer w.Flush()
+		defer f.Close()
+		a.Mu.Unlock()
+	}()
 
 	for i := 0; i < 6; i++ {
 		ReadWriteTask(a, testCase)
 		WriteOnlyTask(a, testCase)
+		time.Sleep(30 * time.Minute)
 		ReadOnlyTask(a, testCase)
 	}
 }
@@ -77,13 +83,13 @@ func ReadWriteTask(a *testagent.Agent, testCase *cohere.TestCase) {
 
 	go func() {
 		defer wg.Done()
-		upsertTask := a.UpsertTask("rw", 200, 10)
+		upsertTask := a.UpsertTask("rw", 200, 20000)
 		upsertTask.Do(testCase.UpsertChan(batchSize))
 	}()
 
 	go func() {
 		defer wg.Done()
-		deleteTask := a.DeleteTask("rw", 100, 5)
+		deleteTask := a.DeleteTask("rw", 100, 2000)
 		deleteTask.Do(testCase.DeleteChan(batchSize / 10))
 	}()
 }
