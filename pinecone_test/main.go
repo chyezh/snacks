@@ -76,14 +76,14 @@ func ReadWriteTask(a *testagent.Agent, testCase *cohere.TestCase) {
 
 	go func() {
 		defer wg.Done()
-		upsertTask := a.UpsertTask("rw", 200, 20000)
+		upsertTask := a.UpsertTask("rw", 200, 10000)
 		upsertTask.Do(testCase.UpsertChan(batchSize))
 	}()
 
 	go func() {
 		defer wg.Done()
-		deleteTask := a.DeleteTask("rw", 100, 2000)
-		deleteTask.Do(testCase.DeleteChan(batchSize / 10))
+		deleteTask := a.DeleteTask("rw", 100, 500)
+		deleteTask.Do(testCase.DeleteChan(batchSize / 20))
 	}()
 
 	time.Sleep(5 * time.Second)
@@ -102,14 +102,14 @@ func WriteOnlyTask(a *testagent.Agent, testCase *cohere.TestCase) {
 	defer wg.Wait()
 	go func() {
 		defer wg.Done()
-		upsertTask := a.UpsertTask("wo", 200, 10)
+		upsertTask := a.UpsertTask("wo", 200, 10000)
 		upsertTask.Do(testCase.UpsertChan(batchSize))
 	}()
 
 	go func() {
 		defer wg.Done()
-		deleteTask := a.DeleteTask("wo", 100, 5)
-		deleteTask.Do(testCase.DeleteChan(batchSize / 10))
+		deleteTask := a.DeleteTask("wo", 100, 500)
+		deleteTask.Do(testCase.DeleteChan(batchSize / 20))
 	}()
 }
 
