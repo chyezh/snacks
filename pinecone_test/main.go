@@ -36,7 +36,7 @@ func main() {
 		panic(err)
 	}
 
-	testCase := cohere.NewTestCase(r, "test")
+	testCase := cohere.NewTestCase(r, "cot")
 	defer testCase.Close()
 	a := &testagent.Agent{
 		Client: &pinecone.Client{
@@ -45,7 +45,7 @@ func main() {
 		},
 	}
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 6; i++ {
 		ReadWriteTask(a, testCase)
 		WriteOnlyTask(a, testCase)
 		ReadOnlyTask(a, testCase)
@@ -66,13 +66,13 @@ func ReadWriteTask(a *testagent.Agent, testCase *cohere.TestCase) {
 
 	go func() {
 		defer wg.Done()
-		upsertTask := a.UpsertTask("rw", 200, 50000)
+		upsertTask := a.UpsertTask("rw", 200, 10)
 		upsertTask.Do(testCase.UpsertChan(batchSize))
 	}()
 
 	go func() {
 		defer wg.Done()
-		deleteTask := a.DeleteTask("rw", 100, 1000)
+		deleteTask := a.DeleteTask("rw", 100, 5)
 		deleteTask.Do(testCase.DeleteChan(batchSize / 10))
 	}()
 }
@@ -83,13 +83,13 @@ func WriteOnlyTask(a *testagent.Agent, testCase *cohere.TestCase) {
 	defer wg.Wait()
 	go func() {
 		defer wg.Done()
-		upsertTask := a.UpsertTask("wo", 200, 50000)
+		upsertTask := a.UpsertTask("wo", 200, 10)
 		upsertTask.Do(testCase.UpsertChan(batchSize))
 	}()
 
 	go func() {
 		defer wg.Done()
-		deleteTask := a.DeleteTask("wo", 100, 1000)
+		deleteTask := a.DeleteTask("wo", 100, 5)
 		deleteTask.Do(testCase.DeleteChan(batchSize / 10))
 	}()
 }

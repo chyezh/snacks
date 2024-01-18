@@ -10,6 +10,8 @@ import (
 	"pinecone_test/pinecone"
 )
 
+var batchSize = 10
+
 func NewTestCase(r *Reader, namespace string) *TestCase {
 	tc := &TestCase{
 		Reader:    r,
@@ -106,7 +108,7 @@ func (tc *TestCase) doUpsert() {
 			maxID = msg.Id
 		}
 
-		if len(upsert.Vectors) >= 500 {
+		if len(upsert.Vectors) >= batchSize {
 			select {
 			case <-tc.closed:
 				return
