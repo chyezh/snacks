@@ -12,6 +12,7 @@ import (
 type UpsertRequest struct {
 	Namespace string         `json:"namespace"`
 	Vectors   []UpsertVector `json:"vectors"`
+	Done      chan struct{}  `json:"-"`
 }
 
 type UpsertVector struct {
@@ -25,6 +26,8 @@ type UpsertResult struct {
 }
 
 func (c *Client) Upsert(ctx context.Context, request UpsertRequest) (*UpsertResult, error) {
+	defer close(request.Done)
+
 	req, err := json.Marshal(request)
 	if err != nil {
 		return nil, errors.Errorf("failed to marshal upsert request, error: %+v", err)

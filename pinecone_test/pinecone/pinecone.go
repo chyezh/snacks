@@ -11,7 +11,6 @@ import (
 type Client struct {
 	APIKey    string
 	IndexHost string
-	Namespace string
 }
 
 // restError is the error response from the Pinecone REST API.

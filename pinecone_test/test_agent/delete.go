@@ -12,46 +12,30 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var batchDeleteLimit int = 5
-
 type DeleteTask struct {
 	*Agent
-	wg      *sizedwaitgroup.SizedWaitGroup
+	wg      sizedwaitgroup.SizedWaitGroup
 	rate    rate.Limiter
 	timeout time.Duration
 	name    string
 }
 
-func (w *DeleteTask) Do(deleteSource <-chan string) {
+func (w *DeleteTask) Do(deleteSource <-chan pinecone.DeleteRequest) {
 	defer w.wg.Wait()
-
-	pending := make([]string, 0, batchDeleteLimit)
-	for v := range deleteSource {
-		pending = append(pending, v)
-		if len(pending) >= batchDeleteLimit {
-			ready := pending
-			pending = make([]string, 0, batchDeleteLimit)
-			w.startNewTask(ready)
-		}
-	}
-	if len(pending) > 0 {
-		w.startNewTask(pending)
+	for req := range deleteSource {
+		w.startNewTask(req)
 	}
 }
 
-func (w *DeleteTask) startNewTask(ids []string) {
-	_ = w.rate.WaitN(context.Background(), len(ids))
+func (w *DeleteTask) startNewTask(req pinecone.DeleteRequest) {
+	_ = w.rate.WaitN(context.Background(), len(req.IDs))
 	w.wg.Add()
 	go func() {
 		defer w.wg.Done()
-		req := pinecone.DeleteRequest{
-			Namespace: w.Namespace,
-			IDs:       ids,
-		}
 		ctx, cancel := context.WithTimeout(context.Background(), w.timeout)
 		defer cancel()
 		start := time.Now()
-		err := w.client.Delete(ctx, req)
+		err := w.Client.Delete(ctx, req)
 		cost := time.Since(start)
 		if err != nil {
 			zap.L().Warn("delete failure", zap.Error(err))
@@ -67,6 +51,6 @@ func (w *DeleteTask) startNewTask(ids []string) {
 			w.name,
 			"delete",
 			status,
-		).Add(float64(len(ids)))
+		).Add(float64(len(req.IDs)))
 	}()
 }

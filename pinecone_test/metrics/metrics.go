@@ -33,3 +33,9 @@ var (
 		[]string{"name"},
 	)
 )
+
+func init() {
+	prometheus.DefaultRegisterer.MustRegister(RequestDuration)
+	prometheus.DefaultRegisterer.MustRegister(VectorTotal)
+	prometheus.DefaultRegisterer.MustRegister(ReadUnitsTotal)
+}
