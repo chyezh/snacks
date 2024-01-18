@@ -1,19 +1,46 @@
 package testagent
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"pinecone_test/pinecone"
 
 	"github.com/pkg/errors"
 	"github.com/remeh/sizedwaitgroup"
+	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
 
 type Agent struct {
-	Client *pinecone.Client
+	Client   *pinecone.Client
+	Mu       sync.Mutex
+	OpLogger *bufio.Writer
+}
+
+type opInfo struct {
+	Now    int64       `json:"n"`
+	OpType string      `json:"o"`
+	Status string      `json:"s"`
+	Cost   int64       `json:"c"`
+	Meta   interface{} `json:"m"`
+}
+
+func (a *Agent) recordOp(info *opInfo) {
+	info.Now = time.Now().UnixNano()
+	b, err := json.Marshal(info)
+	if err != nil {
+		zap.L().Warn("fail to record op", zap.Error(err))
+		return
+	}
+	a.Mu.Lock()
+	defer a.Mu.Unlock()
+	a.OpLogger.Write(b)
+	a.OpLogger.WriteByte('\n')
 }
 
 func (a *Agent) QueryTask(taskName string, concurrency int, limit rate.Limit) *QueryTask {

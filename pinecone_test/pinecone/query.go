@@ -15,6 +15,7 @@ type QueryRequest struct {
 	IncludeMetadata bool      `json:"includeMetadata"`
 	TopK            int       `json:"topK"`
 	Vector          []float32 `json:"vector"`
+	ID              string    `json:"-"`
 }
 
 type QueryResult struct {

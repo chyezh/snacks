@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,13 +29,21 @@ func main() {
 	initLogger()
 	startHTTPServer()
 	defer zap.L().Sync()
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		panic("usage: ./bin <path>")
 	}
 	r, err := cohere.NewReader(os.Args[1])
 	if err != nil {
 		panic(err)
 	}
+
+	f, err := os.OpenFile("op.log", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
+	if err != nil {
+		panic(err)
+	}
+	w := bufio.NewWriter(f)
+	defer w.Flush()
+	defer f.Close()
 
 	testCase := cohere.NewTestCase(r, "cot")
 	defer testCase.Close()
@@ -43,6 +52,8 @@ func main() {
 			APIKey:    "35f8834b-7bf6-4b91-a67e-69e89fd9bfb3",
 			IndexHost: "https://cohere-sc3ybx5.svc.apw5-4e34-81fa.pinecone.io",
 		},
+		Mu:       sync.Mutex{},
+		OpLogger: w,
 	}
 
 	for i := 0; i < 6; i++ {

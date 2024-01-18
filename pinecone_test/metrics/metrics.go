@@ -12,7 +12,7 @@ var (
 		prometheus.HistogramOpts{
 			Namespace: Namespace,
 			Subsystem: Subsystem,
-			Name:      "upsert_request_duration_seconds",
+			Name:      "request_duration_seconds",
 		},
 		[]string{"name", "method", "status"},
 	)

@@ -20,6 +20,10 @@ type UpsertTask struct {
 	name    string
 }
 
+type opInfoUpsertMeta struct {
+	IDs []string `json:"ids"`
+}
+
 func (w *UpsertTask) Do(dataSource <-chan pinecone.UpsertRequest) {
 	defer w.wg.Wait()
 	for req := range dataSource {
@@ -44,6 +48,19 @@ func (w *UpsertTask) startNewTask(req pinecone.UpsertRequest) {
 		}
 
 		status := getError(err)
+		info := &opInfo{
+			OpType: "d",
+			Status: status,
+			Cost:   cost.Milliseconds(),
+			Meta: &opInfoUpsertMeta{
+				IDs: make([]string, 0, len(req.Vectors)),
+			},
+		}
+		for _, v := range req.Vectors {
+			info.Meta.(*opInfoUpsertMeta).IDs = append(info.Meta.(*opInfoUpsertMeta).IDs, v.ID)
+		}
+		w.recordOp(info)
+
 		metrics.RequestDuration.WithLabelValues(
 			w.name,
 			"upsert",

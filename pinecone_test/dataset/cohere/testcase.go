@@ -78,6 +78,7 @@ func (tc *TestCase) doQuery() {
 	for msg := range tc.Chan() {
 		select {
 		case tc.queryCh <- pinecone.QueryRequest{
+			ID:        strconv.FormatInt(int64(msg.Id), 10),
 			Namespace: tc.Namespace,
 			TopK:      100,
 			Vector:    msg.Emb,
@@ -148,6 +149,7 @@ func (tc *TestCase) doneUpsert(maxID int32, req *pinecone.UpsertRequest) {
 
 	select {
 	case tc.queryCh <- pinecone.QueryRequest{
+		ID:        req.Vectors[0].ID,
 		Namespace: tc.Namespace,
 		TopK:      100,
 		Vector:    req.Vectors[0].Values,

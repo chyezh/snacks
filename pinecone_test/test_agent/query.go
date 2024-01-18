@@ -20,6 +20,11 @@ type QueryTask struct {
 	name    string
 }
 
+type opInfoQueryMeta struct {
+	QID      string   `json:"q"`
+	RecallID []string `json:"r"`
+}
+
 func (w *QueryTask) Do(reqSource <-chan pinecone.QueryRequest) {
 	defer w.wg.Wait()
 
@@ -41,8 +46,24 @@ func (w *QueryTask) startNewTask(req pinecone.QueryRequest) {
 		if err != nil {
 			zap.L().Warn("query failure", zap.Error(err))
 		}
-
 		status := getError(err)
+
+		info := &opInfo{
+			OpType: "q",
+			Status: status,
+			Cost:   cost.Milliseconds(),
+			Meta: &opInfoQueryMeta{
+				QID: req.ID,
+			},
+		}
+		if response != nil {
+			info.Meta.(*opInfoQueryMeta).RecallID = make([]string, 0, len(response.Matches))
+			for _, item := range response.Matches {
+				info.Meta.(*opInfoQueryMeta).RecallID = append(info.Meta.(*opInfoQueryMeta).RecallID, item.ID)
+			}
+		}
+		w.recordOp(info)
+
 		metrics.RequestDuration.WithLabelValues(
 			w.name,
 			"query",

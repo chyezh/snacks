@@ -20,6 +20,10 @@ type DeleteTask struct {
 	name    string
 }
 
+type opInfoDeleteMeta struct {
+	IDs []string `json:"ids"`
+}
+
 func (w *DeleteTask) Do(deleteSource <-chan pinecone.DeleteRequest) {
 	defer w.wg.Wait()
 	for req := range deleteSource {
@@ -42,6 +46,16 @@ func (w *DeleteTask) startNewTask(req pinecone.DeleteRequest) {
 		}
 
 		status := getError(err)
+		info := &opInfo{
+			OpType: "d",
+			Status: status,
+			Cost:   cost.Milliseconds(),
+			Meta: &opInfoDeleteMeta{
+				IDs: req.IDs,
+			},
+		}
+		w.recordOp(info)
+
 		metrics.RequestDuration.WithLabelValues(
 			w.name,
 			"delete",
