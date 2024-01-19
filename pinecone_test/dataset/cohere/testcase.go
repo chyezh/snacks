@@ -1,6 +1,7 @@
 package cohere
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -10,7 +11,7 @@ import (
 	"pinecone_test/pinecone"
 )
 
-var batchSize = 500
+var batchSize = 10
 
 func NewTestCase(r *Reader, namespace string) *TestCase {
 	tc := &TestCase{
@@ -100,8 +101,9 @@ func (tc *TestCase) doQuery() {
 
 func (tc *TestCase) doUpsert() {
 	defer tc.wg.Done()
+	count := 0
 	upsert := &pinecone.UpsertRequest{
-		Namespace: tc.Namespace,
+		Namespace: fmt.Sprintf("%s%d", tc.Namespace, count),
 		Done:      make(chan struct{}),
 	}
 	maxID := int32(0)
@@ -126,8 +128,9 @@ func (tc *TestCase) doUpsert() {
 			}
 			tc.wg.Add(1)
 			go tc.doneUpsert(maxID, upsert)
+			count++
 			upsert = &pinecone.UpsertRequest{
-				Namespace: tc.Namespace,
+				Namespace: fmt.Sprintf("%s%d", tc.Namespace, count),
 				Done:      make(chan struct{}),
 			}
 		}

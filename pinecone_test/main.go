@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	batchSize = 5000000
+	batchSize = 50000
 )
 
 var queryLimit = []int{100, 500, 1000}
@@ -63,13 +63,20 @@ func main() {
 		a.Mu.Unlock()
 	}()
 
-	ConsistencyTask(a.Client, *r)
+	Multinamespace(a, testCase)
+
+	// ConsistencyTask(a.Client, *r)
 	//for i := 0; i < 5; i++ {
 	//	ReadWriteTask(a, testCase)
 	//	WriteOnlyTask(a, testCase)
 	//	time.Sleep(1 * time.Minute)
 	//	ReadOnlyTask(a, testCase)
 	//}
+}
+
+func Multinamespace(a *testagent.Agent, testCase *cohere.TestCase) {
+	upsertTask := a.UpsertTask("rw", 200, 100)
+	upsertTask.Do(testCase.UpsertChan(batchSize))
 }
 
 func ReadWriteTask(a *testagent.Agent, testCase *cohere.TestCase) {
