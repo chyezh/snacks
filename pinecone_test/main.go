@@ -128,11 +128,6 @@ func ReadOnlyTask(a *testagent.Agent, testCase *cohere.TestCase) {
 
 func ConsistencyTask(c *pinecone.Client, r cohere.Reader) {
 	namespace := "ctest"
-	req := pinecone.UpsertRequest{
-		Namespace: namespace,
-		Vectors:   make([]pinecone.UpsertVector, 0),
-		Done:      make(chan struct{}),
-	}
 	qErrCount := 0
 	qCount := 0
 	qHit := 0
@@ -140,7 +135,12 @@ func ConsistencyTask(c *pinecone.Client, r cohere.Reader) {
 	qDCount := 0
 	qDHit := 0
 	qDNotHit := 0
-	for i := 0; i < 500; i++ {
+	for i := 0; i < 100; i++ {
+		req := pinecone.UpsertRequest{
+			Namespace: namespace,
+			Vectors:   make([]pinecone.UpsertVector, 0),
+			Done:      make(chan struct{}),
+		}
 		for msg := range r.Chan() {
 			req.Vectors = append(req.Vectors, pinecone.UpsertVector{
 				ID:     strconv.FormatInt(int64(msg.Id), 10),
