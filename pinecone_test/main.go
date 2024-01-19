@@ -63,19 +63,16 @@ func main() {
 		a.Mu.Unlock()
 	}()
 
-	Multinamespace(a, testCase)
-
-	// ConsistencyTask(a.Client, *r)
-	//for i := 0; i < 5; i++ {
-	//	ReadWriteTask(a, testCase)
-	//	WriteOnlyTask(a, testCase)
-	//	time.Sleep(1 * time.Minute)
-	//	ReadOnlyTask(a, testCase)
-	//}
+	for i := 0; i < 6; i++ {
+		ReadWriteTask(a, testCase)
+		WriteOnlyTask(a, testCase)
+		time.Sleep(1 * time.Minute)
+		ReadOnlyTask(a, testCase)
+	}
 }
 
 func Multinamespace(a *testagent.Agent, testCase *cohere.TestCase) {
-	upsertTask := a.UpsertTask("rw", 200, 100)
+	upsertTask := a.UpsertTask("rw", 200, 50)
 	upsertTask.Do(testCase.UpsertChan(batchSize))
 }
 
