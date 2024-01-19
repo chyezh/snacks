@@ -63,12 +63,12 @@ func main() {
 
 	ReadOnlyTask(a, testCase)
 
-	for i := 0; i < 5; i++ {
-		ReadWriteTask(a, testCase)
-		WriteOnlyTask(a, testCase)
-		time.Sleep(1 * time.Minute)
-		ReadOnlyTask(a, testCase)
-	}
+	//for i := 0; i < 5; i++ {
+	//	ReadWriteTask(a, testCase)
+	//	WriteOnlyTask(a, testCase)
+	//	time.Sleep(1 * time.Minute)
+	//	ReadOnlyTask(a, testCase)
+	//}
 }
 
 func ReadWriteTask(a *testagent.Agent, testCase *cohere.TestCase) {
@@ -116,13 +116,13 @@ func WriteOnlyTask(a *testagent.Agent, testCase *cohere.TestCase) {
 }
 
 func ReadOnlyTask(a *testagent.Agent, testCase *cohere.TestCase) {
-	queryTask := a.QueryTask("cro", 200, rate.Limit(5))
+	queryTask := a.QueryTask("cro", 1, rate.Limit(10))
 	queryTask.Do(testCase.QueryChan(5 * 30))
 
-	for _, limit := range queryLimit {
-		queryTask := a.QueryTask("ro", 200, rate.Limit(limit))
-		queryTask.Do(testCase.QueryChan(limit * 30))
-	}
+	// for _, limit := range queryLimit {
+	// 	queryTask := a.QueryTask("ro", 200, rate.Limit(limit))
+	// 	queryTask.Do(testCase.QueryChan(limit * 30))
+	// }
 }
 
 func initLogger() {
