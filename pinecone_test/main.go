@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -61,8 +63,7 @@ func main() {
 		a.Mu.Unlock()
 	}()
 
-	ReadOnlyTask(a, testCase)
-
+	ConsistencyTask(a.Client, *r)
 	//for i := 0; i < 5; i++ {
 	//	ReadWriteTask(a, testCase)
 	//	WriteOnlyTask(a, testCase)
@@ -119,10 +120,117 @@ func ReadOnlyTask(a *testagent.Agent, testCase *cohere.TestCase) {
 	queryTask := a.QueryTask("cro", 1, rate.Limit(10))
 	queryTask.Do(testCase.QueryChan(5 * 30))
 
-	// for _, limit := range queryLimit {
-	// 	queryTask := a.QueryTask("ro", 200, rate.Limit(limit))
-	// 	queryTask.Do(testCase.QueryChan(limit * 30))
-	// }
+	for _, limit := range queryLimit {
+		queryTask := a.QueryTask("ro", 200, rate.Limit(limit))
+		queryTask.Do(testCase.QueryChan(limit * 30))
+	}
+}
+
+func ConsistencyTask(c *pinecone.Client, r cohere.Reader) {
+	namespace := "ctest"
+	req := pinecone.UpsertRequest{
+		Namespace: namespace,
+		Vectors:   make([]pinecone.UpsertVector, 0),
+		Done:      make(chan struct{}),
+	}
+	qErrCount := 0
+	qCount := 0
+	qHit := 0
+	qNotHit := 0
+	qDCount := 0
+	qDHit := 0
+	qDNotHit := 0
+	for i := 0; i < 500; i++ {
+		for msg := range r.Chan() {
+			req.Vectors = append(req.Vectors, pinecone.UpsertVector{
+				ID:     strconv.FormatInt(int64(msg.Id), 10),
+				Values: msg.Emb,
+				Metadata: map[string]string{
+					"title": msg.Title,
+					"langs": strconv.FormatInt(int64(msg.Lang), 10),
+				},
+			},
+			)
+			if len(req.Vectors) >= 20 {
+				break
+			}
+		}
+		_, err := c.Upsert(context.Background(), req)
+		if err != nil {
+			zap.L().Error("failed to upsert", zap.Error(err))
+			continue
+		}
+		// Search all inserted vectors.
+		for _, v := range req.Vectors {
+			resp, err := c.Query(context.Background(), pinecone.QueryRequest{
+				Namespace:       namespace,
+				TopK:            5,
+				Vector:          v.Values,
+				IncludeValues:   true,
+				IncludeMetadata: true,
+			})
+			qCount++
+			if err != nil {
+				zap.L().Error("failed to query", zap.Error(err))
+				qErrCount++
+				continue
+			}
+			hit := false
+			for _, m := range resp.Matches {
+				if m.ID == v.ID {
+					hit = true
+				}
+			}
+			if hit {
+				qHit++
+			} else {
+				qNotHit++
+			}
+		}
+
+		// Delete half of the inserted vectors.
+		ids := make([]string, 0)
+		for _, v := range req.Vectors[0:10] {
+			ids = append(ids, v.ID)
+		}
+
+		if err = c.Delete(context.Background(), pinecone.DeleteRequest{
+			Namespace: namespace,
+			IDs:       ids,
+		}); err != nil {
+			zap.L().Error("failed to delete", zap.Error(err))
+			continue
+		}
+
+		for _, v := range req.Vectors[0:10] {
+			resp, err := c.Query(context.Background(), pinecone.QueryRequest{
+				Namespace:       namespace,
+				TopK:            5,
+				Vector:          v.Values,
+				IncludeValues:   true,
+				IncludeMetadata: true,
+			})
+			qDCount++
+			if err != nil {
+				zap.L().Error("failed to query", zap.Error(err))
+				qErrCount++
+				continue
+			}
+			hit := false
+			for _, m := range resp.Matches {
+				if m.ID == v.ID {
+					hit = true
+				}
+			}
+			if hit {
+				qDHit++
+			} else {
+				qDNotHit++
+			}
+		}
+	}
+	fmt.Printf("qErrCount: %d, qCount: %d, qHit: %d, qNotHit: %d, qDCount: %d, qDHit: %d, qDNotHit: %d\n",
+		qErrCount, qCount, qHit, qNotHit, qDCount, qDHit, qDNotHit)
 }
 
 func initLogger() {
