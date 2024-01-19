@@ -61,10 +61,12 @@ func main() {
 		a.Mu.Unlock()
 	}()
 
-	for i := 0; i < 6; i++ {
+	ReadOnlyTask(a, testCase)
+
+	for i := 0; i < 5; i++ {
 		ReadWriteTask(a, testCase)
 		WriteOnlyTask(a, testCase)
-		time.Sleep(30 * time.Minute)
+		time.Sleep(1 * time.Minute)
 		ReadOnlyTask(a, testCase)
 	}
 }
