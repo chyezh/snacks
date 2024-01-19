@@ -55,5 +55,5 @@ func (c *Client) Query(ctx context.Context, request QueryRequest) (result *Query
 	if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
 		return nil, errors.Wrapf(err, "failed to decode error response at query failure response, http status: %d", res.StatusCode)
 	}
-	return nil, errors.Errorf("failed to upsert, http status: %d, code: %d, msg: %s", res.StatusCode, e.Code, e.Message)
+	return nil, errors.Errorf("failed to query, http status: %d, code: %d, msg: %s", res.StatusCode, e.Code, e.Message)
 }

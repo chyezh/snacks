@@ -49,6 +49,7 @@ func (w *QueryTask) startNewTask(req pinecone.QueryRequest) {
 		status := getError(err)
 
 		info := &opInfo{
+			Name:   w.name,
 			OpType: "q",
 			Status: status,
 			Cost:   cost.Milliseconds(),

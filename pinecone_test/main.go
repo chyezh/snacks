@@ -37,7 +37,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	testCase := cohere.NewTestCase(r, "huge")
+	testCase := cohere.NewTestCase(r, "htest")
 	defer testCase.Close()
 
 	f, err := os.OpenFile("op.log", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)

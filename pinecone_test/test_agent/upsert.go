@@ -49,7 +49,8 @@ func (w *UpsertTask) startNewTask(req pinecone.UpsertRequest) {
 
 		status := getError(err)
 		info := &opInfo{
-			OpType: "d",
+			Name:   w.name,
+			OpType: "u",
 			Status: status,
 			Cost:   cost.Milliseconds(),
 			Meta: &opInfoUpsertMeta{

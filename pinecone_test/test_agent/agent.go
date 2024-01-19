@@ -23,7 +23,8 @@ type Agent struct {
 }
 
 type opInfo struct {
-	Now    int64       `json:"n"`
+	Name   string      `json:"n"`
+	Now    int64       `json:"t"`
 	OpType string      `json:"o"`
 	Status string      `json:"s"`
 	Cost   int64       `json:"c"`

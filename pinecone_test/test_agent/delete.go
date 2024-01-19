@@ -47,7 +47,8 @@ func (w *DeleteTask) startNewTask(req pinecone.DeleteRequest) {
 
 		status := getError(err)
 		info := &opInfo{
-			OpType: "u",
+			Name:   w.name,
+			OpType: "d",
 			Status: status,
 			Cost:   cost.Milliseconds(),
 			Meta: &opInfoDeleteMeta{
