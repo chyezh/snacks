@@ -64,9 +64,6 @@ func (r *Reader) readVectorFromFile(filename string) {
 			zap.L().Warn("proto.Unmarshal failed", zap.Error(err))
 			return
 		}
-		if item.Id < 10055960 {
-			continue
-		}
 		r.ch <- item
 	}
 }
