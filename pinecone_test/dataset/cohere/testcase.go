@@ -228,8 +228,9 @@ func (tc *TestCase) QueryChan(limit int) <-chan pinecone.QueryRequest {
 		defer close(ch)
 		count := 0
 		for req := range tc.queryCh {
-			ch <- req
+			req.TopK = 100 + count*100
 			count++
+			ch <- req
 			if count >= int(limit) {
 				break
 			}

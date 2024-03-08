@@ -50,8 +50,8 @@ func main() {
 
 	a := &testagent.Agent{
 		Client: &pinecone.Client{
-			APIKey:    "35f8834b-7bf6-4b91-a67e-69e89fd9bfb3",
-			IndexHost: "https://cohere-sc3ybx5.svc.apw5-4e34-81fa.pinecone.io",
+			APIKey:    "",
+			IndexHost: "",
 		},
 		Mu:       sync.Mutex{},
 		OpLogger: w,
@@ -63,12 +63,24 @@ func main() {
 		a.Mu.Unlock()
 	}()
 
-	for i := 0; i < 6; i++ {
-		ReadWriteTask(a, testCase)
-		WriteOnlyTask(a, testCase)
-		time.Sleep(1 * time.Minute)
-		ReadOnlyTask(a, testCase)
-	}
+	TopKStart(a, testCase)
+
+	// for i := 0; i < 6; i++ {
+	// 	ReadWriteTask(a, testCase)
+	// 	WriteOnlyTask(a, testCase)
+	// 	time.Sleep(1 * time.Minute)
+	// 	ReadOnlyTask(a, testCase)
+	// }
+}
+
+func TopKStart(a *testagent.Agent, testCase *cohere.TestCase) {
+	queryTask := a.QueryTask("cro", 1, rate.Limit(10))
+	queryTask.Do(testCase.QueryChan(99))
+}
+
+func ColdStart(a *testagent.Agent, testCase *cohere.TestCase) {
+	queryTask := a.QueryTask("cro", 1, rate.Limit(10))
+	queryTask.Do(testCase.QueryChan(5 * 30))
 }
 
 func Multinamespace(a *testagent.Agent, testCase *cohere.TestCase) {

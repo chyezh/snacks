@@ -22,7 +22,9 @@ type QueryTask struct {
 
 type opInfoQueryMeta struct {
 	QID      string   `json:"q"`
+	TopK     int      `json:"k"`
 	RecallID []string `json:"r"`
+	RU       int      `json:"ru"`
 }
 
 func (w *QueryTask) Do(reqSource <-chan pinecone.QueryRequest) {
@@ -54,7 +56,8 @@ func (w *QueryTask) startNewTask(req pinecone.QueryRequest) {
 			Status: status,
 			Cost:   cost.Milliseconds(),
 			Meta: &opInfoQueryMeta{
-				QID: req.ID,
+				QID:  req.ID,
+				TopK: req.TopK,
 			},
 		}
 		if response != nil {
@@ -62,6 +65,7 @@ func (w *QueryTask) startNewTask(req pinecone.QueryRequest) {
 			for _, item := range response.Matches {
 				info.Meta.(*opInfoQueryMeta).RecallID = append(info.Meta.(*opInfoQueryMeta).RecallID, item.ID)
 			}
+			info.Meta.(*opInfoQueryMeta).RU = response.Usage.ReadUnits
 		}
 		w.recordOp(info)
 

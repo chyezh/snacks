@@ -5,14 +5,14 @@ import (
 	"fmt"
 
 	"github.com/pingcap/kvproto/pkg/kvrpcpb"
+	"github.com/tikv/client-go/v2/rawkv"
 	"github.com/tikv/client-go/v2/txnkv"
 )
 
 func main() {
 	writeTxn(context.Background())
-	// writeTxnV2(context.Background())
 	getTxn(context.Background())
-	getTxnV2(context.Background())
+	writeRaw(context.Background())
 }
 
 func getTxnV2(ctx context.Context) {
@@ -88,5 +88,20 @@ func writeTxn(ctx context.Context) {
 	err = txn.Commit(ctx)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func writeRaw(ctx context.Context) {
+	client, err := rawkv.NewClientWithOpts(ctx, []string{"127.0.0.1:2379"})
+	if err != nil {
+		panic(err)
+	}
+	if err := client.Put(ctx, []byte("key"), []byte("value_raw")); err != nil {
+		panic(err)
+	}
+	if val, err := client.Get(ctx, []byte("key")); err != nil {
+		panic(err)
+	} else {
+		fmt.Println(string(val))
 	}
 }

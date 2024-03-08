@@ -1,3 +1,2 @@
-[storage]
-api-version = 2
-enable-ttl = true
+[raftstore]
+api-version = 1
