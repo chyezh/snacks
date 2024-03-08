@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package msg;
+
+option go_package = "msg";
+
+message Msg {
+  int32 id = 1;
+  string title = 2;
+  int32 lang = 3;
+  repeated float emb = 4;
+}
