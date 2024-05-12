@@ -1,6 +1,7 @@
+#pragma once
 
-
-class FutureInterface {
+class FutureInterface
+{
   virtual bool isReady() const = 0;
 
   virtual void cancel() = 0;
