@@ -1,5 +1,5 @@
 
-include(/home/chyezh/repository/microsoft/vcpkg/scripts/buildsystems/vcpkg.cmake)
+include(/Users/zilliz/repo/github/microsoft/vcpkg/scripts/buildsystems/vcpkg.cmake)
 
 find_package(folly CONFIG REQUIRED)
 
