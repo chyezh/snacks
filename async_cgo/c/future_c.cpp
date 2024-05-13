@@ -1,6 +1,8 @@
 #include "future_c.h"
 
-extern "C" void future_set_callback(Future* future, Callback callback,
+#include "Futures.h"
+
+extern "C" void future_set_callback(CFuture* future, Callback callback,
                                     void* callback_parameter) {
   unlockMutex(callback_parameter);
 }

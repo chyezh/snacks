@@ -8,12 +8,14 @@ extern void unlockMutex(void*);
 extern "C" {
 #endif
 
-void future_set_callback(Future* future, Callback callback,
+void future_run(CFuture* future);
+
+void future_set_callback(CFuture* future, Callback callback,
                          void* callback_parameter);
 
-int future_is_ready(Future* future);
+int future_is_ready(CFuture* future);
 
-void future_cancel(Future* future);
+void future_cancel(CFuture* future);
 
 #ifdef __cplusplus
 }

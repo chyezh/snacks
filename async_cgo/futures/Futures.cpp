@@ -6,18 +6,21 @@
 #include <iostream>
 #include <string>
 
-int foo(int x) {
+int* foo() {
+  int* x = new int{10076};
   // do something with x
-  std::cout << "foo(" << x << ")" << std::endl;
-  return x;
+  std::cout << "foo(" << *x << ")" << std::endl;
+  throw std::runtime_error("foo error");
 }
 
 int main() {
-  Future<int, std::function<int(int)>> future(foo);
-  // future.run(48);
-  future.cancel(std::runtime_error("cancelled"));
+  IFuture* future = new Future<int*, std::function<int*()>>(foo);
+
+  future->run();
+  // future->cancel(folly::FutureCancellation());
   try {
-    auto result = future.get();
+    auto result = future->get();
+    std::cout << "result: " << *static_cast<int*>(result) << std::endl;
   } catch (const std::exception& e) {
     std::cout << "exception: " << e.what() << std::endl;
   }
