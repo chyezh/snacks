@@ -5,31 +5,54 @@
 
 #include <chrono>
 #include <iostream>
+#include <mutex>
 #include <string>
 #include <thread>
+#include <variant>
+
+#include "FutureWithResult.h"
 
 int main() {
-  auto future = new Future<int*>();
+  std::mutex locker;
+  locker.lock();
+
+  auto future = new FutureWithResult<int, std::function<void()>>(
+      [&locker]() { locker.unlock(); });
 
   future->asyncProduce([]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    int* x = new int{10076};
+    int x = 10076;
     // do something with x
-    std::cout << "foo(" << *x << ")" << std::endl;
+    std::cout << "foo(" << x << ")" << std::endl;
     return x;
   });
 
-  future->asyncConsume(
-      [](int* x) { std::cout << "consume(" << *x << ")" << std::endl; },
-      [](std::exception& e) {
-        std::cout << "exception: " << e.what() << std::endl;
-      });
+  future->asyncConsumeResult();
+  // future->asyncConsume([](int r) {}, [](const std::exception& error) {});
+  //     [](int x) { std::cout << "consume(" << x << ")" << std::endl; },
+  //     [](std::exception& e) {
+  //       std::cout << "exception: " << e.what() << std::endl;
+  //     });
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
   future->cancel(folly::FutureCancellation());
 
-  std::cout << "main thread is running..." << std::endl;
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  std::cout << "main thread is done..." << std::endl;
+  // future->asyncConsumeResult();
+  locker.lock();
+
+  auto result = future->get();
+
+  try {
+    std::cout << std::get<int>(*result) << std::endl;
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
+  }
+
+  try {
+    std::cout << std::get<std::exception>(*result).what() << std::endl;
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
+  }
 
   delete future;
   return 0;

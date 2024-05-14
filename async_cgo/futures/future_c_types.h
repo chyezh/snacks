@@ -6,7 +6,11 @@ extern "C" {
 
 typedef struct future CFuture;
 
-typedef void (*Callback)(CFuture* future, void* callback_parameter);
+typedef enum {
+  CANCEL = 0,
+  TIMEOUT = 1,
+  DEADLINE_EXCEED = 2
+} CFutureCancellation;
 
 #ifdef __cplusplus
 }
