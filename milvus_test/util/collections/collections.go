@@ -86,6 +86,7 @@ func (coll *Collection) ApplyRandomCase(ctx context.Context, count int) error {
 			); err != nil {
 				fmt.Printf("insert failed, %s\n", err)
 			}
+			coll.cli.Flush(ctx, coll.Name(), false)
 			fmt.Print("insert success\n")
 		}()
 		count -= batch

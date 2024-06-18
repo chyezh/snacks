@@ -1,8 +1,11 @@
 module tikv_test
 
-go 1.21.5
+go 1.21.10
 
-require github.com/tikv/client-go/v2 v2.0.7
+require (
+	dependency1 v0.0.0-00010101000000-000000000000
+	github.com/tikv/client-go/v2 v2.0.7
+)
 
 require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
@@ -22,7 +25,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pingcap/errors v0.11.5-0.20211224045212-9687c2b0f87c // indirect
 	github.com/pingcap/failpoint v0.0.0-20220801062533-2eaa32854a6c // indirect
-	github.com/pingcap/kvproto v0.0.0-20230403051650-e166ae588106 // indirect
+	github.com/pingcap/kvproto v0.0.0-20230403051650-e166ae588106
 	github.com/pingcap/log v1.1.1-0.20221110025148-ca232912c9f3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
@@ -48,3 +51,5 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
+
+replace dependency1 => /home/chyezh/repository/chyezh/snacks/tikv_test/dependecy1

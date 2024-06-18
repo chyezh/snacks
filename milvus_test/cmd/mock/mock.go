@@ -24,7 +24,7 @@ func main() {
 		wg.Add()
 		go func(i int) {
 			defer wg.Done()
-			if err := mockOneCollectionPerUser(ctx, fmt.Sprintf("user3_%d", i), cfg.Copy()); err != nil {
+			if err := mockOneCollectionPerUser(ctx, fmt.Sprintf("user1_%d", i), cfg.Copy()); err != nil {
 				fmt.Printf("fail to mock user %d, %s\n", i, err)
 			}
 		}(i)
@@ -54,5 +54,5 @@ func mockOneCollectionPerUser(ctx context.Context, username string, c client.Con
 	if err != nil {
 		return err
 	}
-	return collections.MockCollection(ctx, collections.Book, 1, cli, collections.OptName(fmt.Sprintf("book_%s", username)))
+	return collections.MockCollection(ctx, collections.Book, 50000, cli, collections.OptName(fmt.Sprintf("book_%s", username)))
 }
