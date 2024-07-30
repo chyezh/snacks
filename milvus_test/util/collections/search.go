@@ -20,7 +20,7 @@ func (coll *Collection) TestSearch(ctx context.Context, r *rate.Limiter, concurr
 		panic(err)
 	}
 
-	for i := 0; i < count; i++ {
+	for i := 0; ; i++ {
 		if err := r.Wait(ctx); err != nil {
 			panic(err)
 		}

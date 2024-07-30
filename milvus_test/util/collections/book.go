@@ -11,17 +11,17 @@ func newBookCollection(opts ...Opt) *Collection {
 	option.apply(opts...)
 	metricType := entity.L2
 
-	idx, err := entity.NewIndexIvfPQ(
-		metricType,
-		12,
-		16,
-		8,
-	)
-	// idx, err := entity.NewIndexHNSW(
+	// idx, err := entity.NewIndexIvfPQ(
 	// 	metricType,
-	// 	8,
+	// 	12,
+	// 	16,
 	// 	8,
 	// )
+	idx, err := entity.NewIndexHNSW(
+		metricType,
+		8,
+		8,
+	)
 	if err != nil {
 		panic(err)
 	}

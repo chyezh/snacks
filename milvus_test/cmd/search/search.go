@@ -15,7 +15,7 @@ import (
 
 var (
 	limit         = flag.Int("limit", 1000, "limit")
-	userCount     = flag.Int("user-count", 10, "user-count")
+	userCount     = flag.Int("user-count", 1, "user-count")
 	topK          = flag.Int("topK", 15, "top-k")
 	nq            = flag.Int("nq", 1, "nq")
 	count         = flag.Int("count", 500, "count")
@@ -49,7 +49,7 @@ func main() {
 }
 
 func testOneCollectionPerUser(ctx context.Context, i int, c client.Config) error {
-	username := fmt.Sprintf("user2_%d", i)
+	username := fmt.Sprintf("user1_%d", i)
 	// database := fmt.Sprintf("db_%s", username)
 	collection := fmt.Sprintf("book_%s", username)
 	c.Username = username

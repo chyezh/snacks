@@ -54,5 +54,5 @@ func mockOneCollectionPerUser(ctx context.Context, username string, c client.Con
 	if err != nil {
 		return err
 	}
-	return collections.MockCollection(ctx, collections.Book, 50000, cli, collections.OptName(fmt.Sprintf("book_%s", username)))
+	return collections.MockCollection(ctx, collections.Book, 10000, cli, collections.OptName(fmt.Sprintf("book_%s", username)))
 }
