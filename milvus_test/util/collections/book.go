@@ -5,7 +5,7 @@ import "github.com/milvus-io/milvus-sdk-go/v2/entity"
 func newBookCollection(opts ...Opt) *Collection {
 	option := options{
 		Name:   "book",
-		DIM:    "768",
+		DIM:    "128",
 		AutoID: true,
 	}
 	option.apply(opts...)
@@ -20,7 +20,7 @@ func newBookCollection(opts ...Opt) *Collection {
 	idx, err := entity.NewIndexHNSW(
 		metricType,
 		8,
-		8,
+		200,
 	)
 	if err != nil {
 		panic(err)

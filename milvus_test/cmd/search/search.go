@@ -23,7 +23,7 @@ var (
 	ratePerSecond = flag.Int("rate", 100, "rate")
 	testType      = flag.String("test-type", "search", "search or query")
 	key           = flag.String("key", "book_id", "key")
-	exprType      = flag.String("expr", "in", "expr type")
+	exprType      = flag.String("expr", "range", "expr type")
 )
 
 func main() {

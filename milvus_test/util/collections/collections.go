@@ -46,7 +46,19 @@ func (coll *Collection) CreateCollection(ctx context.Context) error {
 	return coll.cli.CreateCollection(ctx, coll.schema, coll.shard, client.WithConsistencyLevel(entity.ClBounded))
 }
 
-func (coll *Collection) ApplyRandomCase(ctx context.Context, count int) error {
+func (coll *Collection) DeleteRows(ctx context.Context, count int) error {
+	for i := 0; i < count; i++ {
+		id := 451674489241737363 + i
+		if err := coll.cli.Delete(ctx, coll.Name(), "", fmt.Sprintf("book_id == %d", id)); err != nil {
+			fmt.Printf("delete failed, %s\n", err)
+			return err
+		}
+		fmt.Printf("delete success, %d\n", id)
+	}
+	return nil
+}
+
+func (coll *Collection) ApplyRandomCase(ctx context.Context, count int, byUpsert bool) error {
 	wg := sizedwaitgroup.New(5)
 	batch := 1000
 	offset := 0
@@ -80,11 +92,15 @@ func (coll *Collection) ApplyRandomCase(ctx context.Context, count int) error {
 		wg.Add()
 		go func() {
 			defer wg.Done()
-			if _, err := coll.cli.Insert(ctx, coll.Name(),
-				"",
-				colls...,
-			); err != nil {
+			var err error
+			if byUpsert {
+				_, err = coll.cli.Upsert(ctx, coll.Name(), "", colls...)
+			} else {
+				_, err = coll.cli.Insert(ctx, coll.Name(), "", colls...)
+			}
+			if err != nil {
 				fmt.Printf("insert failed, %s\n", err)
+				return
 			}
 			coll.cli.Flush(ctx, coll.Name(), false)
 			fmt.Print("insert success\n")

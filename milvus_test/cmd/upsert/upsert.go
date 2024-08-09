@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/chyezh/snacks/milvus_test/util/collections"
-
 	"github.com/milvus-io/milvus-sdk-go/v2/client"
 	"github.com/remeh/sizedwaitgroup"
 )
@@ -33,26 +32,27 @@ func main() {
 }
 
 func mockOneCollectionPerUser(ctx context.Context, username string, c client.Config) error {
-	cli, err := client.NewClient(ctx, c)
-	if err != nil {
-		return err
-	}
+	// cli, err := client.NewClient(ctx, c)
+	// if err != nil {
+	// 	return err
+	// }
 	password := "password"
-	if err := cli.CreateCredential(ctx, username, password); err != nil {
-		return err
-	}
-	cli.AddUserRole(ctx, username, "admin")
-	database := fmt.Sprintf("db_%s", username)
-	if err := cli.CreateDatabase(ctx, database); err != nil {
-		return err
-	}
-	cli.Close()
+	// if err := cli.CreateCredential(ctx, username, password); err != nil {
+	// 	return err
+	// }
+	// cli.AddUserRole(ctx, username, "admin")
+	// database := fmt.Sprintf("db_%s", username)
+	// if err := cli.CreateDatabase(ctx, database); err != nil {
+	// 	return err
+	// }
+	// cli.Close()
 	c.Username = username
 	c.Password = password
-	c.DBName = database
-	cli, err = client.NewClient(ctx, c)
+	// c.DBName = database
+	cli, err := client.NewClient(ctx, c)
 	if err != nil {
+		fmt.Printf("error: %v\n", err)
 		return err
 	}
-	return collections.MockCollection(ctx, collections.Book, 10000, cli, collections.OptName(fmt.Sprintf("book_%s", username)))
+	return collections.UpsertCollectionRows(ctx, collections.Book, 10, cli, collections.OptName(fmt.Sprintf("book_%s", username)))
 }
